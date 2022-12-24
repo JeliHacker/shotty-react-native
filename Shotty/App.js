@@ -24,6 +24,39 @@ export default function App() {
   }
 
 
+
+
+  const [fizzIsLoaded, setFizzIsLoaded] = useState(false);
+  const fizzSoundObject = useRef(new Audio.Sound());
+
+  const loadFizzSound = async () => {
+    if (!fizzIsLoaded) {
+      await fizzSoundObject.current.loadAsync(require('./assets/fizz.mp3')).catch((error) => { console.log(error) });
+      setFizzIsLoaded(true);
+    }
+  };
+
+  loadFizzSound()
+
+  async function playFizzSound() {
+    await fizzSoundObject.current.playAsync().catch((error) => { console.log(error) });
+    await fizzSoundObject.current.setIsLoopingAsync(true).catch((error) => { console.log(error) });
+  }
+
+  const stopFizzSound = async () => {
+    try {
+      await fizzSoundObject.current.stopAsync().catch((error) => { console.log(error) });
+      await fizzSoundObject.current.setPositionAsync(0).catch((error) => { console.log(error) });
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+
+
+
+
+
   const [isLoaded, setIsLoaded] = useState(false);
 
   const soundObject = useRef(new Audio.Sound());
@@ -121,6 +154,25 @@ export default function App() {
   }, []);
 
 
+  /* ---------------------------- Fizz Sound ---------------------------- */
+
+  // Play the sound when the image source changes
+  useEffect(() => {
+    if (imageSource === canWithHole) {
+      (async () => {
+        try {
+          setTimeout(playFizzSound, 500);
+
+          console.log("imageSource is currently!" + imageSource);
+        } catch (error) {
+          console.log(error);
+        }
+      })();
+    } else {
+      stopFizzSound();
+      console.log("imageSource must be can without hole!")
+    }
+  }, [imageSource]);
 
   /* ---------------------------- Return ---------------------------- */
 
