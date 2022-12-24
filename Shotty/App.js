@@ -8,24 +8,21 @@ import { Audio } from 'expo-av';
 
 export default function App() {
 
-  var imageSource = require('../Shotty/assets/white-claw-black-cherry-us3.png')
-  var image2Source = require('../Shotty/assets/white-claw-hole-unpopped.png')
+  var canWithoutHole = require('../Shotty/assets/white-claw-black-cherry-us3.png')
+  var canWithHole = require('../Shotty/assets/white-claw-hole-unpopped.png')
 
-  const [source, setSource] = useState(imageSource);
-  const [imagingSource, setImageSource] = useState(imageSource);
+  const [imageSource, setImageSource] = useState(canWithoutHole);
 
-  const [thumbSoundStatus, setThumbSoundStatus] = useState();
-
-  async function thumbHoleSound() {
+  async function playThumbHoleSound() {
     // console.log('Loading Sound');
-    const { sound } = await Audio.Sound.createAsync(require('./assets/thumb-gun-2.mp3')).catch((error) => { console.log(error) });
-    setThumbSoundStatus(sound);
+    const { sound } = await Audio.Sound
+      .createAsync(require('./assets/thumb-gun-2.mp3'))
+      .catch((error) => { console.log(error) });
 
     // console.log('Playing Sound');
     await sound.playAsync();
   }
 
-  const [gulpSoundStatus, setGulpSoundStatus] = useState("stopped");
 
   const [isLoaded, setIsLoaded] = useState(false);
 
@@ -56,15 +53,6 @@ export default function App() {
     }
   }
 
-  useEffect(() => {
-    return thumbSoundStatus
-      ? () => {
-        // console.log('Unloading Sound');
-        thumbSoundStatus.unloadAsync();
-      }
-      : undefined;
-  }, [thumbSoundStatus]);
-
 
   async function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -77,12 +65,13 @@ export default function App() {
   }
 
   const putHole = async () => {
-    setSource(imageSource === imageSource ? image2Source : imageSource);
-    thumbHoleSound()
+    setImageSource(imageSource === canWithoutHole ? canWithHole : canWithoutHole);
+    playThumbHoleSound()
     Vibration.vibrate()
-
   }
 
+
+  /* ---------------------------- Accelerometer ---------------------------- */
 
   const [tilt, setTilt] = useState(null);
 
@@ -123,7 +112,6 @@ export default function App() {
       } else {
         console.log("You must've encountered some nasty error if you're getting this console.log message.")
         setTilt(null);
-        setGulpSoundStatus("stopped")
       }
     });
 
@@ -134,14 +122,13 @@ export default function App() {
 
 
 
-
-
+  /* ---------------------------- Return ---------------------------- */
 
   return (
     <View style={styles.container}>
 
       <Image
-        source={imagingSource}
+        source={imageSource}
         style={{ height: "95%", width: "95%" }}
       />
 
@@ -149,15 +136,14 @@ export default function App() {
         style={styles.touchableStyle}
         onLongPress={() => {
           putHole()
-          setImageSource(imagingSource === imageSource ? image2Source : imageSource);
         }}
-        delayLongPress={800}
+        delayLongPress={500}
       />
       <View>
         <Text>{tilt === 'forward' ? 'Phone is tilted forward' : 'Phone is not tilted forward'} z: {Math.round(z * 1000) / 1000}</Text>
       </View>
       <StatusBar style="auto" />
-    </View >
+    </View>
   );
 }
 
