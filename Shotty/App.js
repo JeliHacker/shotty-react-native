@@ -5,11 +5,12 @@ import { Accelerometer } from 'expo-sensors';
 import { Audio } from 'expo-av';
 
 
+const TILTINGPOINT = -0.3
 
 export default function App() {
 
-  var canWithoutHole = require('../Shotty/assets/white-claw-black-cherry-us3.png')
-  var canWithHole = require('../Shotty/assets/white-claw-hole-unpopped.png')
+  var canWithoutHole = require('../Shotty/assets/white-claw-black-cherry-us3.png');
+  var canWithHole = require('../Shotty/assets/white-claw-hole-unpopped.png');
 
   const [imageSource, setImageSource] = useState(canWithoutHole);
 
@@ -136,10 +137,10 @@ export default function App() {
 
   useEffect(() => {
     const subscription = Accelerometer.addListener(acceleration => {
-      if (acceleration.z < -0.2) {
+      if (acceleration.z < TILTINGPOINT) {
         setTilt('backward');
         stopGulpSound()
-      } else if (acceleration.z > -0.2) {
+      } else if (acceleration.z > TILTINGPOINT) {
         setTilt('forward');
         playGulpSound();
       } else {
@@ -183,7 +184,17 @@ export default function App() {
         source={imageSource}
         style={{ height: "95%", width: "95%" }}
       />
+      <svg></svg>
+      <svg></svg>
 
+      {imageSource === canWithHole && z > TILTINGPOINT ? (
+        <Image
+          source={require('../Shotty/assets/waterfall-cropped-more.gif')}
+          style={styles.waterfall}
+        />
+      ) : (
+        <View />
+      )}
       <TouchableOpacity
         style={styles.touchableStyle}
         onLongPress={() => {
@@ -220,6 +231,11 @@ const styles = StyleSheet.create({
     height: '38%',
     width: '70%',
     underlayColor: null
+  },
+  waterfall: {
+    position: 'absolute',
+    bottom: '3%',
+    width: '25%',
   }
 });
 
