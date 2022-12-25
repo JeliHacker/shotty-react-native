@@ -6,6 +6,7 @@ import { Audio } from 'expo-av';
 
 
 const TILTINGPOINT = -0.3
+const TARGET_DURATION = 3000; // target duration in milliseconds
 
 export default function App() {
 
@@ -15,12 +16,12 @@ export default function App() {
   const [imageSource, setImageSource] = useState(canWithoutHole);
 
   async function playThumbHoleSound() {
-    // console.log('Loading Sound');
+
     const { sound } = await Audio.Sound
       .createAsync(require('./assets/thumb-gun-2.mp3'))
       .catch((error) => { console.log(error) });
 
-    // console.log('Playing Sound');
+
     await sound.playAsync();
   }
 
@@ -40,6 +41,7 @@ export default function App() {
   loadFizzSound()
 
   async function playFizzSound() {
+    console.log("I'm playing the fizz sound!!")
     await fizzSoundObject.current.playAsync().catch((error) => { console.log(error) });
     await fizzSoundObject.current.setIsLoopingAsync(true).catch((error) => { console.log(error) });
   }
@@ -104,6 +106,43 @@ export default function App() {
     Vibration.vibrate()
   }
 
+  /* ---------------------------- Timer ---------------------------- */
+  const [isTiltedForward, setIsTiltedForward] = useState(false);
+  const [tiltedDuration, setTiltedDuration] = useState(0);
+
+  useEffect(() => {
+    const subscription = Accelerometer.addListener(acceleration => {
+      if (acceleration.z > TILTINGPOINT) {
+        setIsTiltedForward(true);
+      } else if (acceleration.z < TILTINGPOINT) {
+        setIsTiltedForward(false);
+        // console.log("tiltedDuration " + tiltedDuration)
+        setTiltedDuration(tiltedDuration);
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, [tiltedDuration]);
+
+  useEffect(() => {
+    let interval;
+    if (isTiltedForward) {
+      interval = setInterval(() => {
+        setTiltedDuration(tiltedDuration + 100);
+
+        if (tiltedDuration >= TARGET_DURATION) {
+          console.log('Phone has been tilted forward for 3 seconds!');
+          clearInterval(interval);
+        }
+      }, 100);
+    }
+    return () => clearInterval(interval);
+  }, [isTiltedForward, tiltedDuration]);
+
+
+
 
   /* ---------------------------- Accelerometer ---------------------------- */
 
@@ -132,14 +171,14 @@ export default function App() {
     return () => _unsubscribe();
   }, []);
 
-  Accelerometer.setUpdateInterval(500)
+  Accelerometer.setUpdateInterval(500) // TODO: change to 100 for launch
 
 
   useEffect(() => {
     const subscription = Accelerometer.addListener(acceleration => {
       if (acceleration.z < TILTINGPOINT) {
         setTilt('backward');
-        stopGulpSound()
+        stopGulpSound();
       } else if (acceleration.z > TILTINGPOINT) {
         setTilt('forward');
         playGulpSound();
@@ -184,8 +223,6 @@ export default function App() {
         source={imageSource}
         style={{ height: "95%", width: "95%" }}
       />
-      <svg></svg>
-      <svg></svg>
 
       {imageSource === canWithHole && z > TILTINGPOINT ? (
         <Image
@@ -202,7 +239,7 @@ export default function App() {
         }}
         delayLongPress={500}
       />
-      <View>
+      <View style={{ alignContent: 'center', alignItems: 'center' }}>
         <Text>{tilt === 'forward' ? 'Phone is tilted forward' : 'Phone is not tilted forward'} z: {Math.round(z * 1000) / 1000}</Text>
       </View>
       <StatusBar style="auto" />
