@@ -16,16 +16,12 @@ export default function App() {
   const [imageSource, setImageSource] = useState(canWithoutHole);
 
   async function playThumbHoleSound() {
-
     const { sound } = await Audio.Sound
       .createAsync(require('./assets/thumb-gun-2.mp3'))
       .catch((error) => { console.log(error) });
 
-
     await sound.playAsync();
   }
-
-
 
 
   const [fizzIsLoaded, setFizzIsLoaded] = useState(false);
@@ -60,14 +56,14 @@ export default function App() {
 
 
 
-  const [isLoaded, setIsLoaded] = useState(false);
+  const [isGulpLoaded, setIsGulpLoaded] = useState(false);
 
-  const soundObject = useRef(new Audio.Sound());
+  const gulpSoundObject = useRef(new Audio.Sound());
 
   const loadGulpSound = async () => {
-    if (!isLoaded) {
-      await soundObject.current.loadAsync(require('./assets/gulping.mp3')).catch((error) => { console.log(error) });
-      setIsLoaded(true);
+    if (!isGulpLoaded) {
+      await gulpSoundObject.current.loadAsync(require('./assets/gulping.mp3')).catch((error) => { console.log(error) });
+      setIsGulpLoaded(true);
     }
   };
 
@@ -75,15 +71,15 @@ export default function App() {
 
   async function playGulpSound() {
 
-    await soundObject.current.playAsync().catch((error) => { console.log(error) });
-    await soundObject.current.setIsLoopingAsync(true).catch((error) => { console.log(error) });
+    await gulpSoundObject.current.playAsync().catch((error) => { console.log(error) });
+    await gulpSoundObject.current.setIsLoopingAsync(true).catch((error) => { console.log(error) });
 
   }
 
   const stopGulpSound = async () => {
     try {
-      await soundObject.current.stopAsync().catch((error) => { console.log(error) });
-      await soundObject.current.setPositionAsync(0).catch((error) => { console.log(error) });
+      await gulpSoundObject.current.stopAsync().catch((error) => { console.log(error) });
+      await gulpSoundObject.current.setPositionAsync(0).catch((error) => { console.log(error) });
     } catch (error) {
       console.log(error);
     }
@@ -109,6 +105,7 @@ export default function App() {
   /* ---------------------------- Timer ---------------------------- */
   const [isTiltedForward, setIsTiltedForward] = useState(false);
   const [tiltedDuration, setTiltedDuration] = useState(0);
+  const [isDrinkFinished, setIsDrinkFinished] = useState(false);
 
   useEffect(() => {
     const subscription = Accelerometer.addListener(acceleration => {
@@ -133,7 +130,7 @@ export default function App() {
         setTiltedDuration(tiltedDuration + 100);
 
         if (tiltedDuration >= TARGET_DURATION) {
-          console.log('Phone has been tilted forward for 3 seconds!');
+          // console.log('Phone has been tilted forward for 3 seconds!');
           clearInterval(interval);
         }
       }, 100);
@@ -181,7 +178,9 @@ export default function App() {
         stopGulpSound();
       } else if (acceleration.z > TILTINGPOINT) {
         setTilt('forward');
-        playGulpSound();
+        if (imageSource == canWithHole) {
+          playGulpSound();
+        }
       } else {
         console.log("You must've encountered some nasty error if you're getting this console.log message.")
         setTilt(null);
@@ -191,26 +190,23 @@ export default function App() {
     return () => {
       subscription.remove();
     };
-  }, []);
+  }, [imageSource]);
 
 
   /* ---------------------------- Fizz Sound ---------------------------- */
 
-  // Play the sound when the image source changes
+  // Play the fizz sound when the imageSource changes
   useEffect(() => {
     if (imageSource === canWithHole) {
       (async () => {
         try {
-          setTimeout(playFizzSound, 500);
-
-          console.log("imageSource is currently!" + imageSource);
+          setTimeout(playFizzSound, 500); // delay fizz sound by half a second
         } catch (error) {
           console.log(error);
         }
       })();
     } else {
       stopFizzSound();
-      console.log("imageSource must be can without hole!")
     }
   }, [imageSource]);
 
